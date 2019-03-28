@@ -5,22 +5,20 @@ using Test
 	@testset "testing components" begin
 
 		@testset "tests gradient of objective function" begin
-                              
-                                        
-                                          
-                                               
-                                                                
-                                               
+
+
+
+
 		end
 
 
 		@testset "tests gradient of constraint function" begin
-                              
-                              
-                                          
-                                         
-                                                                   
-                                                
+
+
+
+
+
+
 		end
 	end
 
@@ -34,7 +32,7 @@ using Test
 			                            fval=[-1.20821;-0.732819;-0.013422])
 
 		@testset "checking result of NLopt maximization" begin
-
+			tol2 = 1e-2
 			t1 = table_NLopt()
 			for c in names(truth)
 				@test all(maximum.(abs.(t1[c].-truth[c])) .< tol2)
@@ -42,7 +40,8 @@ using Test
 		end
 
 
-		@testset "checking result of NLopt maximization" begin
+		@testset "checking result of JuMP maximization" begin
+			tol2 = 1e-2
 			t1 = table_JuMP()
 			for c in names(truth)
 				@test all(maximum.(abs.(t1[c].-truth[c])) .< tol2)
