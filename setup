@@ -1,7 +1,7 @@
 # Set  up
 
 cd(joinpath(DEPOT_PATH[1],"dev","HWconstrained"))  # go to package location
-] activate .  
+] activate .
 ] instantiate
 
 ] activate    # no args goes back to main
@@ -14,3 +14,8 @@ data()     # errors: function is incomplete! go and complete it in your editor!
 
 # from any other location
 ] test HWconstrained
+
+#  commit changes
+git add .   # adds everything. edit if that's not what you want
+git commit -m 'my homework'
+git push

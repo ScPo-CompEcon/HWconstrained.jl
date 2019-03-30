@@ -69,26 +69,33 @@ dat = data()
 
 	## Does not work
 	function obj(x::Vector,grad::Vector,data::Dict)
+		a = data["a"]
+		println("$a")
+
 		if length(grad) > 0
-			# grad wrt x1
-			a = data["a"]
 			# grad wrt c
-			grad[4] = (-a) * exp(-a * c)
+			grad[4] = (-a) * exp(-a * x[4])
+
 			# grad with respect to omega 1
 			grad[1] = (-a) * data["pi"] * sum(data["z"][i,1] * exp(-a *
-			sum(data["z"][j,i] * omega[i] for i in 1:3)) for j in 1:data["nss"])
+			(data["z"][i,1] * x[1] + data["z"][i,2] * x[2] + data["z"][i,3] * x[3])) for i in 1:data["nss"])
 
 			# grad wrt to omega 2
 			grad[2] = (-a) * data["pi"] * sum(data["z"][i,2] * exp(-a *
-			sum(data["z"][j,i] * omega[i] for i in 1:3)) for j in 1:data["nss"])
+			(data["z"][i,1] * x[1] + data["z"][i,2] * x[2] + data["z"][i,3] * x[3])) for i in 1:data["nss"])
 
 			# grad wrt to omega 3
 			grad[3] = (-a) * data["pi"] * sum(data["z"][i,3] * exp(-a *
-			sum(data["z"][j,i] * omega[i] for i in 1:3)) for j in 1:data["nss"])
+			(data["z"][i,1] * x[1] + data["z"][i,2] * x[2] + data["z"][i,3] * x[3])) for i in 1:data["nss"])
 
 		end
+		# test =  (-1) * (-exp(-a*x[4]) + data["pi"] * sum(-exp(-a *
+		# (data["z"][i,1] * x[1] + data["z"][i,2] * x[2] + data["z"][i,3] * x[3])) for i in 1:data["nss"]))
+		# println(grad)
+
+
 		return (-1) * (-exp(-a*x[4]) + data["pi"] * sum(-exp(-a *
-		sum(data["z"][j,i] * x[i] for i in 1:3)) for j in 1:data["nss"]))
+		(data["z"][i,1] * x[1] + data["z"][i,2] * x[2] + data["z"][i,3] * x[3])) for i in 1:data["nss"]))
 	end
 
 
@@ -107,13 +114,17 @@ dat = data()
 
 
 	function max_NLopt(a=0.5)
+		count = 0 # keep track of # function evaluations
 		opt = Opt(:LD_MMA, 4)
 		lower_bounds!(opt, [-Inf, -Inf, -Inf, 0.])
-		xtol_rel!(opt, 1e-4)
-		min_objective!(opt,(x,grad) -> obj(x,grad,data()))
-		inequality_constraint!(opt, (x,grad) -> constr(x,grad,data()))
+		xtol_rel!(opt, 1e-7)
+		grad = zeros(4)
+		println(length(grad))
+		d = data(a)
+		min_objective!(opt,(x,grad) -> obj(x,grad,d))
+		inequality_constraint!(opt, (x,grad) -> constr(x,grad,d))
 		ftol_rel!(opt,1e-9)
-		vector_init = vcat(data()["e"], 1.0)
+		vector_init = vcat(d["e"], 0)
 		NLopt.optimize(opt, vector_init)
 	end
 
@@ -121,10 +132,11 @@ dat = data()
 		d = DataFrame(a=[0.5;1.0;5.0],c = zeros(3),omega1=zeros(3),omega2=zeros(3),omega3=zeros(3),fval=zeros(3))
 		for i in 1:nrow(d)
 			xx = max_NLopt(d[i,:a])
-			for j in 2:ncol(d)-1
-				d[i,j] = xx[2][j-1]
+			for j in 1:ncol(d)-3
+				d[i,j+2] = xx[2][j]
 			end
-			d[i,end] = xx[1]
+			d[i,2] = xx[2][end]
+			d[i,end] = -xx[1]
 		end
 		return d
 	end
