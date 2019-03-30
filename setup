@@ -1,0 +1,16 @@
+# Set  up
+
+cd(joinpath(DEPOT_PATH[1],"dev","HWconstrained"))  # go to package location
+] activate .  
+] instantiate
+
+] activate    # no args goes back to main
+using HWconstrained    # precompiles
+data()     # errors: function is incomplete! go and complete it in your editor!
+
+# if in the package directory:
+] activate .
+] test
+
+# from any other location
+] test HWconstrained
