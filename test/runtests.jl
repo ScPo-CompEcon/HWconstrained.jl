@@ -39,10 +39,9 @@ omega3=[1.60291;0.801455;0.160291],
 
 fval=[-1.20821;-0.732819;-0.013422])
 
-
+tol2=1e-2
 
 @testset "checking result of NLopt maximization" begin
-@test all(maximum.(abs.(t1[c].-truth[c])) .< tol2)          
 t1 = table_JuMP()
 for c in names(truth)
     @test all(maximum.(abs.(t1[c].-truth[c])) .< tol2)
@@ -51,5 +50,7 @@ end
 
 @testset "checking result of NLopt maximization" begin
 @test all(maximum.(abs.(t1[c].-truth[c])) .< tol2)
+end
+end
 end
 end

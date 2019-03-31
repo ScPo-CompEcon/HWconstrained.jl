@@ -59,10 +59,10 @@ d = data(a)
 e= d["e"]
 optimum = Opt(:LD_MMA, 4)
 lower_bounds!(optimum, [0., -Inf, -Inf, -Inf])   
-max_objective!(optimum, (x, g)->obj(x, g, d), 1e-8)
+max_objective!(optimum, (x, g)->obj(x, g, d))
 inequality_constraint!(optimum, (x, g)->constr(x, g, d), 1e-8)
 ftol_rel!(optimum, 1e-8)
-NLopt.optimize(optimum)
+NLopt.optimize(optimum, vcat(0,e))
 end
 
 function table_NLopt()
