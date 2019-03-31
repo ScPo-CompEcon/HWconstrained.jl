@@ -1,26 +1,33 @@
 using HWconstrained
 using Test
+using Calculus
 
 @testset "HWconstrained.jl" begin
 	@testset "testing components" begin
 
 		@testset "tests gradient of objective function" begin
-                              
-                                        
-                                          
-                                               
-                                                                
-                                               
+                d = data()
+				grad = zeros(4)
+				obj(ones(4), zeros(4), d)
+				@test Calculus.gradient(arg -> obj(arg, zeros(4), d), ones(4)) == grad
+
+
+
+
+
 		end
 
 
 		@testset "tests gradient of constraint function" begin
-                              
-                              
-                                          
-                                         
-                                                                   
-                                                
+            d = data()
+			grad = zeros(4)
+			constr(ones(4), zeros(4), d)
+			@test Calculus.gradient(arg -> constr(arg, zeros(4), d), ones(4)) == grad
+
+
+
+
+
 		end
 	end
 
