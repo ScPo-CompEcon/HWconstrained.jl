@@ -1,0 +1,10 @@
+name = "HWconstrained"
+uuid = "2aa259a0-4d4c-11e9-0909-ad9b1ef308f5"
+authors = ["florian oswald <florian.oswald@gmail.com>"]
+version = "0.1.0"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
