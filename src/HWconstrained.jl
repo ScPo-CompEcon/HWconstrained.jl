@@ -8,20 +8,23 @@ greet() = print("Hello World!")
 	export data, table_NLopt, table_JuMP
 
 	function data(a=0.5)
-                            
-                                                                      
-                                          
-                                                  
-               
-               
-                         
-                                                                                                                            
-                                             
-		return Dict("a"=>a,"na"=>na,"nc"=>nc,"ns"=>ns,"nss"=>nss,"e"=>e,"p"=>p,"z"=>z,"pi"=>pi)
+		z2 = [0.72, 0.92, 1.12, 1.32]
+		z3 = [0.86, 0.96, 1.06, 1.16]
+		z = [[1.0, z2[i],z3[j]] for i in 1:4 for j in 1:4]
+		e = [2, 0, 0]
+
+		return Dict("e"=>e,"z"=>z)
 	end
 
 
 	function max_JuMP(a=0.5)
+		d = data(a)
+		m = Model(with_optimizer(Ipopt.Optimizer))
+		@variable(m, 0 <= c)
+		@variable(m, omega[1:3])
+		@NLconstraint(m, 0 == c + sum(omega[i] - d["e"][i] for i in 1:3))
+	    @NLobjective(m, Max, -exp(-a*c) + sum(-exp(-a*sum(d["z"][j][i] * omega[i] for i in 1:3)) / 16 for j in 1:16))
+		JuMP.optimize!(m)
 
 		return Dict("obj"=>objective_value(m),"c"=>value(c),"omegas"=>[value(omega[i]) for i in 1:length(omega)])
 	end
@@ -39,66 +42,37 @@ greet() = print("Hello World!")
 		return d
 	end
 
-                        
-                         
-                  
-                          
-                       
-                                    
 
 	function obj(x::Vector,grad::Vector,data::Dict)
-                            
-          
-                  
-             
-                                   
-                                                                               
-        
-                        
-                               
-                         
-                    
-                    
-                                   
-                         
-                                       
-                                                             
-                                                                                                        
-          
-         
-            
-                              
-                                  
-                                   
-               
+		a = data["a"]
+		z = data["z"]
+		if length(grad) > 0
+			grad[1] = -a * exp(-a * x[1])
+			grad[2] = -sum(a * exp(-a * z[i][2] * sum(z[i]' * x[2:4])) for i in 1:16)/16
+			grad[3] = -sum(a * exp(-a * z[i][3] * sum(z[i]' * x[2:4])) for i in 1:16)/16
+			grad[4] = -sum(a * exp(-a * z[i][4] * sum(z[i]' * x[2:4])) for i in 1:16)/16
+		end
+		return exp(-a * x[1]) + sum(exp(-a * z[i]' * x[2:4]) for i in 1:16)/16
+
 	end
 
 	function constr(x::Vector,grad::Vector,data::Dict)
-                            
-          
-                  
+		if length(grad) > 0
+			grad[1:4] = 1
+		end
+		return x[1] + sum(x[2:4] - data["e"])
 
-                                             
-                                                      
-
-                        
-                             
-                                              
-        
-                                        
-                                        
-                       
 	end
 
 	function max_NLopt(a=0.5)
-             
-                                    
-                                       
-                                               
-                                           
-                                                     
-                     
-                                                
+		d = data(a)
+		opt = Opt(:LD_MMA, 4)
+		lower_bounds!(opt, [0., -Inf, -Inf, -Inf])
+		xtol_rel!(opt,1e-2)
+		min_objective!(opt, (x,grad) -> obj(x, grad, d))
+		inequality_constraint!(opt, (x, grad) -> constr(x, grad, d))
+		return NLopt.optimize(opt, zeros(4))
+
 	end
 
 	function table_NLopt()
