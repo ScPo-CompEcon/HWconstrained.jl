@@ -18,7 +18,7 @@ function data(a=0.5)
 		z3 = [0.86, 0.96, 1.06, 1.16]
 		z = [(1, i, j) for i in z2 for j in z3]  # All possible payoffs
 		p = ones(3)
-		pi = repeat(1/16, nss)
+		pi = repeat([1/16], nss)
 		e = [2, 0, 0]
 
 		return Dict("a"=>a,"na"=>na,"nc"=>nc,"ns"=>ns,"nss"=>nss,"e"=>e,"p"=>p,"z"=>z,"pi"=>pi)
@@ -31,11 +31,12 @@ end
 
 		@variable(m, c>=0)
 		@variable(m, x[1:3])
-		@NLconstraint(m, c + sum(d["p"] .* (x .- d["e"])) == 0 )
-		@NLobjective(m, Max, -exp(-a * c) + sum(-exp(-a * sum(d["z"]'[j][i] * x[i] for i in 1:3)) * d["pi"][j] for j in 1:16))
+		@NLconstraint(m, c + sum(d["p"][i] * (x[i] - d["e"][i]) for i in 1:3) == 0 )
+		@NLobjective(m, Max, -exp(-a * c) + sum(-exp(-a * sum(d["z"][j][i] * x[i] for i in 1:3)) * d["pi"][j] for j in 1:16))
 		JuMP.optimize!(m)
 		return Dict("obj"=>objective_value(m),"c"=>value(c),"omegas"=>[value(x[i]) for i in 1:length(x)])
 	end
+
 
 	function table_JuMP()
 		d = DataFrame(a=[0.5;1.0;5.0],c = zeros(3),omega1=zeros(3),omega2=zeros(3),omega3=zeros(3),fval=zeros(3))
