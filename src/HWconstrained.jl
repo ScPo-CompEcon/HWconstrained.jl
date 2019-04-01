@@ -35,7 +35,7 @@ greet() = print("Hello World!")
 	function table_JuMP()
 		d = DataFrame(a=[0.5;1.0;5.0],c = zeros(3),omega1=zeros(3),omega2=zeros(3),omega3=zeros(3),fval=zeros(3))
 		for i in 1:nrow(d)
-			xx = max_JuMP(d[i,:a])
+			xx = maxJuMP(d[i,:a])
 			d[i,:c] = xx["c"]
 			d[i,:omega1] = xx["omegas"][1]
 			d[i,:omega2] = xx["omegas"][2]
@@ -45,27 +45,28 @@ greet() = print("Hello World!")
 		return d
 	end
 
-	function obj(x::Vector,data::Dict)
-		a = data["a"]
-		z = data["z"]
+	function obj(x::Vector,d::Dict)
+		a = d["a"]
+		z = d["z"]
+		pi = d["pi"]
 		if length(grad)>0
-			  grad[1] = sum(data["pi"][i]*(-a)*exp((-a)*z[i][1]*sum(z[i]'*x[1:3])) for i in 1:data["nss"])
-			  grad[2] = sum(data["pi"][i]*(-a)*exp((-a)*z[i][2]*sum(z[i]'*x[1:3])) for i in 1:data["nss"])
-			  grad[3] = sum(data["pi"][i]*(-a)*exp((-a)*z[i][3]*sum(z[i]'*x[1:3])) for i in 1:data["nss"])
+			  grad[1] = sum(d["pi"][i]*(-a)*exp((-a)*z[i][1]*sum(z[i]'*x[1:3])) for i in 1:d["nss"])
+			  grad[2] = sum(d["pi"][i]*(-a)*exp((-a)*z[i][2]*sum(z[i]'*x[1:3])) for i in 1:d["nss"])
+			  grad[3] = sum(d["pi"][i]*(-a)*exp((-a)*z[i][3]*sum(z[i]'*x[1:3])) for i in 1:d["nss"])
 			  grad[4] = (-a)*exp.(-a*x[4])
 		  end
-		return (exp(-a*x[4])+sum(data["pi"][i]*exp((-a)*sum(z[i]'*x[1:3])) for i in 1:data["nss"]))
+		return (exp(-a*x[4])+sum(d["pi"][i]*exp((-a)*sum(z[i]'*x[1:3])) for i in 1:d["nss"]))
 	  end
 
 
-	function constr(x::Vector,grad::Vector,data::Dict)
+	function constr(x::Vector,grad::Vector,d::Dict)
 		if length(grad)>0
-			   grad[1] = data["p"][1]
-			   grad[2] = data["p"][2]
-			   grad[3] = data["p"][3]
+			   grad[1] = d["p"][1]
+			   grad[2] = d["p"][2]
+			   grad[3] = d["p"][3]
 			   grad[4] = 1
 	   end
-	   return x[4] + data["p"]'*(x[1:3] - data["e"])
+	   return x[4] + d["p"]'*(x[1:3] - d["e"])
 	end
 
 
@@ -75,15 +76,17 @@ greet() = print("Hello World!")
 
 
 	function max_NLopt(a=0.5)
+		count = 0 # keep track of # function evaluations
 		opt = Opt(:LD_MMA, 4)
-		d = HWconstrained.data(a)
-		objE(x,g;data = d) = HWconstrained.obj(x,g,data)
-		constrE(x,g;data = d) = HWconstrained.constr(x,g,data)
-		NLopt.min_objective!(opt,(x,g)->objE(x,g))
-		xtol_rel!(opt,1e-10)
-		lower_bounds!(opt, [-Inf,-Inf,-Inf,0])
-		inequality_constraint!(opt,(x,g)->constrE(x,g))
- 		return NLopt.optimize(opt, zeros(4))
+		lower_bounds!(opt, [-Inf, -Inf, -Inf, 0.])
+		xtol_rel!(opt, 1e-7)
+		grad = zeros(4)
+		println(length(grad))
+		d = data(a)
+		min_objective!(opt,(x,grad) -> obj(x,grad,d))
+		inequality_constraint!(opt, (x,grad) -> constr(x,grad,d))
+		ftol_rel!(opt,1e-9)
+		NLopt.optimize(opt, [0,0,0,0])
 end
 
 
